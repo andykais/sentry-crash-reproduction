@@ -1,0 +1,51 @@
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.3'
+}
+
+version '0.0.1'
+
+repositories {
+    maven { url 'http://repo1.maven.org/maven2' }
+    // Using local directory for a custom agora zmq build, see dependencies block
+    flatDir { dirs 'libs' }
+}
+
+apply plugin: 'java'
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:all" << "-Werror"
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'src/main/java'
+        }
+    }
+}
+
+dependencies {
+    // json conversion
+    compile 'com.google.code.gson:gson:2.8.1'
+
+    // sentry
+    compile 'io.sentry:sentry:1.7.16'
+
+    // raven dependencies
+    compile 'org.slf4j:slf4j-api:1.7.9'
+    compile 'org.slf4j:slf4j-jdk14:1.7.9'
+}
+
+jar {
+    from sourceSets.main.output
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+
+    archiveName 'sentrycrash.jar'
+    manifest {
+        attributes 'Main-Class': 'sentrycrash.Main'
+    }
+}
+
+defaultTasks 'jar'
